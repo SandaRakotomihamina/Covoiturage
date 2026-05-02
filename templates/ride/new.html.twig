@@ -1,0 +1,177 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Proposer un trajet{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Proposer un nouveau trajet</h3>
+                    <p class="text-muted mb-0 mt-2" style="font-size: 0.9rem;">Remplissez le formulaire ci-dessous pour partager votre trajet avec d'autres passagers</p>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div class="mb-4">
+                            <label for="departure" class="form-label">Lieu de départ</label>
+                            <input type="text" class="form-control" id="departure" name="departure" 
+                                   placeholder="" 
+                                   required
+                                   aria-describedby="departureHelp">
+                            <small id="departureHelp" class="form-text text-muted">Entrez le lieu de départ exact</small>
+                        </div>
+                        <div class="mb-4">
+                            <label for="destination" class="form-label">Destination</label>
+                            <input type="text" class="form-control" id="destination" name="destination" 
+                                   placeholder="" 
+                                   required
+                                   aria-describedby="destinationHelp">
+                            <small id="destinationHelp" class="form-text text-muted">Entrez le lieu d'arrivée exact</small>
+                        </div>
+                        <div class="mb-4">
+                            <label for="departure_time" class="form-label">Date et heure de départ</label>
+                            <input type="datetime-local" class="form-control" id="departure_time" name="departure_time" 
+                                   required
+                                   aria-describedby="timeHelp">
+                            <small id="timeHelp" class="form-text text-muted">Sélectionnez la date et l'heure exactes du départ</small>
+                        </div>
+                        <div class="mb-4">
+                            <label for="available_seats" class="form-label">Nombre de places disponibles</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="number" class="form-control" id="available_seats" name="available_seats" 
+                                           min="1" max="{{ app.user.availableSeats }}" 
+                                           value="1"
+                                           required
+                                           aria-describedby="seatsHelp">
+                                </div>
+                                <div class="col-md-6">
+                                    <small id="seatsHelp" class="form-text text-muted">
+                                        Maximum {{ app.user.availableSeats }} places
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="notes" class="form-label">Informations supplémentaires (optionnel)</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"
+                                      placeholder="Ex: Points d'arrêt, conditions, musique, etc..."></textarea>
+                            <small class="form-text text-muted">Ajoutez des détails pour aider les passagers</small>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ path('app_ride_index') }}" class="btn btn-secondary">Annuler</a>
+                            <button type="button" id="submit_button" class="btn btn-success">Créer le trajet</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal confirmation création trajet -->
+<div class="modal fade" id="rideCreateConfirmModal" tabindex="-1" aria-labelledby="rideCreateConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <span class="modal-icon modal-icon-info" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="8" cy="8" r="6" />
+                        <line x1="8" y1="5" x2="8" y2="8" />
+                        <circle cx="8" cy="11" r="0.5" />
+                    </svg>
+                </span>
+                <h5 class="modal-title" id="rideCreateConfirmModalLabel">Créer ce trajet ?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Vous allez publier ce trajet pour que d'autres passagers puissent le réserver.</p>
+                <p class="text-muted">Vous pourrez toujours modifier votre profil et proposer un autre trajet après.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Retour</button>
+                <button type="button" id="confirmRideCreate" class="btn btn-success">Créer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Fonction pour vérifier le formulaire
+function checkForm() {
+    const departure = document.getElementById('departure').value.trim();
+    const destination = document.getElementById('destination').value.trim();
+    const departureTime = document.getElementById('departure_time').value;
+    const availableSeats = document.getElementById('available_seats').value;
+    const maxSeats = {{ app.user.availableSeats }};
+    
+    let disabled = false;
+    if (departure === '' || destination === '' || departureTime === '' || availableSeats === '') {
+        disabled = true;
+    } else {
+        // Vérifier si departureTime est dans le passé
+        const now = new Date();
+        const selectedTime = new Date(departureTime);
+        if (selectedTime <= now) {
+            disabled = true;
+        }
+        // Vérifier availableSeats
+        const seats = parseInt(availableSeats);
+        if (isNaN(seats) || seats < 1 || seats > maxSeats) {
+            disabled = true;
+        }
+    }
+    document.getElementById('submit_button').disabled = disabled;
+}
+
+// Attacher les événements et initialiser le formulaire
+function initRideForm() {
+    const departureInput = document.getElementById('departure');
+    const destinationInput = document.getElementById('destination');
+    const departureTimeInput = document.getElementById('departure_time');
+    const availableSeatsInput = document.getElementById('available_seats');
+    const submitButton = document.getElementById('submit_button');
+    const confirmRideCreate = document.getElementById('confirmRideCreate');
+    const form = document.querySelector('form');
+    const maxSeats = {{ app.user.availableSeats }};
+
+    if (!departureInput || !destinationInput || !departureTimeInput || !availableSeatsInput || !submitButton || !confirmRideCreate || !form) {
+        return;
+    }
+
+    function handleSeatsInput() {
+        let value = parseInt(availableSeatsInput.value, 10);
+        if (isNaN(value) || value < 1) {
+            availableSeatsInput.value = '';
+        } else if (value > maxSeats) {
+            availableSeatsInput.value = maxSeats;
+        }
+        checkForm();
+    }
+
+    departureInput.addEventListener('input', checkForm);
+    destinationInput.addEventListener('input', checkForm);
+    departureTimeInput.addEventListener('input', checkForm);
+    availableSeatsInput.addEventListener('input', handleSeatsInput);
+
+    const now = new Date();
+    const minDateTime = now.toISOString().slice(0, 16);
+    departureTimeInput.min = minDateTime;
+    checkForm();
+
+    submitButton.addEventListener('click', function() {
+        const modal = new bootstrap.Modal(document.getElementById('rideCreateConfirmModal'));
+        modal.show();
+    });
+
+    confirmRideCreate.addEventListener('click', function() {
+        form.submit();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initRideForm);
+document.addEventListener('turbo:load', initRideForm);
+
+</script>
+{% endblock %}

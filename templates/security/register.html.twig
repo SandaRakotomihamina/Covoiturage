@@ -1,0 +1,287 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title text-center">Créer un compte</h3>
+                    <p class="text-muted text-center mb-0 mt-2" style="font-size: 0.9rem;">Rejoignez notre communauté de covoiturage</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="registerForm">
+                        <!-- Name Field -->
+                        <div class="mb-4">
+                            <div style="position: relative;">
+                                <input type="text" 
+                                       name="name" 
+                                       id="inputName" 
+                                       class="form-control floating-input" 
+                                       placeholder=" "
+                                       value="{{ name|default('') }}"
+                                       required>
+                                <label for="inputName" class="floating-label">Nom complet</label>
+                            </div>
+                            <small id="nameHelp" class="form-text text-muted">Le nom qui s'affichera pour les autres utilisateurs</small>
+                        </div>
+
+                        <!-- Email Field -->
+                        <div class="mb-4">
+                            <div style="position: relative;">
+                                <input type="email" 
+                                       name="email" 
+                                       id="inputEmail" 
+                                       class="form-control floating-input" 
+                                       autocomplete="email" 
+                                       placeholder=" "
+                                       value="{{ email|default('') }}"
+                                       required>
+                                <label for="inputEmail" class="floating-label">Adresse email</label>
+                            </div>
+                            <div id="emailError" class="invalid-feedback" style="display: none; margin-top: 0.5rem; color: var(--error);"></div>
+                            <small id="emailHelp" class="form-text text-muted">Nous utiliserons cette adresse pour vos connexions futures</small>
+                        </div>
+
+                        <!-- Password Field -->
+                        <div class="mb-4">
+                            <div style="position: relative;">
+                                <input type="password" 
+                                       name="password" 
+                                       id="inputPassword" 
+                                       class="form-control floating-input" 
+                                       autocomplete="new-password" 
+                                       placeholder=" "
+                                       required
+                                       style="padding-right: 2.5rem;">
+                                <label for="inputPassword" class="floating-label">Mot de passe</label>
+                                <button type="button" class="btn-toggle-password" id="togglePassword" 
+                                        style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 0.5rem; z-index: 10;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                            <!-- Password Strength Bar -->
+                            <div style="margin-top: 0.75rem; overflow: hidden; border-radius: 4px; height: 6px; background-color: var(--bg-secondary);">
+                                <div id="passwordStrength" style="height: 100%; width: 0%; background-color: #dc3545; transition: width 0.3s, background-color 0.3s;"></div>
+                            </div>
+                            <small id="passwordStrengthText" class="form-text text-muted" style="margin-top: 0.25rem; display: block;">Force: Faible</small>
+                            <small id="passwordHelp" class="form-text text-muted">Créez un mot de passe fort et mémorisable</small>
+                        </div>
+
+                        <div class="d-grid">
+                            <button class="btn btn-success" type="submit" id="submitBtn" style="font-weight: 500; padding: 0.75rem;" disabled>
+                                S'inscrire
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <p class="mb-0">Vous avez déjà un compte ? <a href="{{ path('app_login') }}" style="font-weight: 500;">Se connecter</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.floating-label {
+    position: absolute;
+    left: 0.75rem;
+    top: 1rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    pointer-events: none;
+    transition: all 0.3s ease;
+    opacity: 1;
+}
+
+.floating-input:focus + .floating-label,
+.floating-input:not(:placeholder-shown) + .floating-label,
+.floating-input.has-value + .floating-label {
+    opacity: 1;
+    top: -0.75rem;
+    font-size: 0.7rem;
+    color: var(--accent);
+}
+
+.floating-input {
+    padding-top: 1.8rem !important;
+    padding-bottom: 0.6rem !important;
+}
+
+.floating-input:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1) !important;
+}
+
+.btn-toggle-password {
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
+}
+
+.btn-toggle-password:hover {
+    color: var(--accent);
+}
+
+.invalid-input {
+    border-color: var(--error) !important;
+    background-color: rgba(220, 53, 69, 0.05) !important;
+}
+</style>
+
+<script>
+(function () {
+    function initRegisterForm() {
+        const form = document.getElementById('registerForm');
+        const nameInput = document.getElementById('inputName');
+        const emailInput = document.getElementById('inputEmail');
+        const passwordInput = document.getElementById('inputPassword');
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const submitBtn = document.getElementById('submitBtn');
+        const emailError = document.getElementById('emailError');
+        const passwordStrength = document.getElementById('passwordStrength');
+        const passwordStrengthText = document.getElementById('passwordStrengthText');
+
+        if (!form) {
+            return;
+        }
+
+        // Floating input handler
+        const floatingInputs = document.querySelectorAll('.floating-input');
+        floatingInputs.forEach(input => {
+            if (input.dataset.floatingAttached) {
+                return;
+            }
+            input.dataset.floatingAttached = 'true';
+
+            if (!input.value) {
+                input.placeholder = ' ';
+            } else {
+                input.classList.add('has-value');
+            }
+
+            input.addEventListener('focus', function() {
+                if (!this.value) this.placeholder = ' ';
+            });
+            input.addEventListener('blur', function() {
+                if (!this.value) this.placeholder = '';
+            });
+            input.addEventListener('input', function() {
+                this.classList.toggle('has-value', !!this.value);
+            });
+        });
+
+        // Toggle password visibility
+        if (togglePasswordBtn && passwordInput && !togglePasswordBtn.dataset.toggleAttached) {
+            togglePasswordBtn.dataset.toggleAttached = 'true';
+            togglePasswordBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const isPassword = passwordInput.type === 'password';
+                passwordInput.type = isPassword ? 'text' : 'password';
+                const svg = this.querySelector('svg');
+                if (svg) {
+                    svg.innerHTML = isPassword
+                        ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>'
+                        : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+                }
+            });
+        }
+
+        // Email validation
+        if (emailInput && !emailInput.dataset.emailAttached) {
+            emailInput.dataset.emailAttached = 'true';
+            emailInput.addEventListener('input', function() {
+                const email = this.value;
+                const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+                if (email === '') {
+                    this.classList.remove('invalid-input');
+                    emailError.style.display = 'none';
+                } else if (!isValid) {
+                    this.classList.add('invalid-input');
+                    emailError.style.display = 'block';
+                    emailError.textContent = 'Adresse email invalide';
+                } else {
+                    this.classList.remove('invalid-input');
+                    emailError.style.display = 'none';
+                }
+                checkFormValidity();
+            });
+        }
+
+        // Password strength calculator
+        function calculatePasswordStrength(password) {
+            let strength = 0;
+
+            if (password.length >= 8) strength += 20;
+            if (password.length >= 12) strength += 10;
+            if (/[a-z]/.test(password)) strength += 15;
+            if (/[A-Z]/.test(password)) strength += 15;
+            if (/[0-9]/.test(password)) strength += 15;
+            if (/[^a-zA-Z0-9]/.test(password)) strength += 25;
+
+            return Math.min(strength, 100);
+        }
+
+        // Password strength indicator
+        if (passwordInput && !passwordInput.dataset.strengthAttached) {
+            passwordInput.dataset.strengthAttached = 'true';
+            passwordInput.addEventListener('input', function() {
+                const strength = calculatePasswordStrength(this.value);
+                const strengthBar = document.getElementById('passwordStrength');
+                const strengthText = document.getElementById('passwordStrengthText');
+
+                if (strengthBar) {
+                    strengthBar.style.width = strength + '%';
+                }
+                if (strengthText) {
+                    if (strength < 40) {
+                        strengthText.textContent = '🔴 Faible';
+                        strengthBar.style.backgroundColor = '#dc3545';
+                    } else if (strength < 70) {
+                        strengthText.textContent = '🟡 Moyen';
+                        strengthBar.style.backgroundColor = '#ffc107';
+                    } else {
+                        strengthText.textContent = '🟢 Fort';
+                        strengthBar.style.backgroundColor = '#28a745';
+                    }
+                }
+
+                checkFormValidity();
+            });
+        }
+
+        // Check form validity
+        function checkFormValidity() {
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const strength = calculatePasswordStrength(password);
+
+            const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            const isStrong = strength >= 40;
+            const allFieldsFilled = name && email && password;
+
+            const isFormValid = allFieldsFilled && isEmailValid && isStrong;
+            submitBtn.disabled = !isFormValid;
+        }
+
+        if (nameInput) nameInput.addEventListener('input', checkFormValidity);
+        checkFormValidity();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initRegisterForm);
+    } else {
+        initRegisterForm();
+    }
+    document.addEventListener('turbo:load', initRegisterForm);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{# Email envoyé au propriétaire de la voiture lors d'une réservation #}
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            border-radius: 5px 5px 0 0;
+            text-align: center;
+        }
+        .content {
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+        }
+        .ride-details {
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            margin: 20px 0;
+            border-radius: 3px;
+        }
+        .passenger-info {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 3px;
+            margin: 20px 0;
+        }
+        .info-row {
+            margin: 10px 0;
+        }
+        .label {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📌 Nouvelle réservation sur votre trajet</h1>
+        </div>
+        <div class="content">
+            <p>Bonjour <strong>{{ driver.name }}</strong>,</p>
+            
+            <p>Un passager vient de réserver une place sur l'un de vos trajets!</p>
+
+            <div class="ride-details">
+                <h3 style="margin-top: 0; color: #007bff;">Détails du trajet</h3>
+                <div class="info-row">
+                    <span class="label">📍 De :</span> {{ ride.departure }}
+                </div>
+                <div class="info-row">
+                    <span class="label">📍 Vers :</span> {{ ride.destination }}
+                </div>
+                <div class="info-row">
+                    <span class="label">🕐 Départ :</span> {{ ride.departureTime|date('d/m/Y à H:i') }}
+                </div>
+                <div class="info-row">
+                    <span class="label">🚗 Places restantes :</span> {{ ride.availableSeats }}
+                </div>
+            </div>
+
+            <div class="passenger-info">
+                <h3 style="margin-top: 0; color: #333;">Informations du passager</h3>
+                <div class="info-row">
+                    <span class="label">👤 Nom :</span> {{ passenger.name }}
+                </div>
+                <div class="info-row">
+                    <span class="label">📧 Email :</span> {{ passenger.email }}
+                </div>
+                <div class="info-row">
+                    <span class="label">📱 Téléphone :</span> {{ passenger.phone ?? 'Non fourni' }}
+                </div>
+            </div>
+
+            <p>Merci de contacter le passager pour confirmer les détails du trajet. N'oubliez pas de vérifier l'adresse de départ et toutes les informations importantes avant le départ.</p>
+
+            <p>Bon trajet!</p>
+
+            <div class="footer">
+                <p>Cet email a été généré automatiquement par le système de covoiturage.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

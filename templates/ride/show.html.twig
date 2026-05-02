@@ -1,0 +1,190 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails du trajet{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ ride.departure }} → {{ ride.destination }}</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Trajet Info -->
+                    <div class="mb-4">
+                        <h5 style="color: var(--text-primary); margin-bottom: 1rem;">Informations du trajet</h5>
+                        <div class="d-grid gap-2" style="gap: 0.75rem !important;">
+                            <div style="display: flex; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--border-radius); align-items: center;">
+                                <span style="font-size: 1.2rem;"></span>
+                                <div>
+                                    <small style="opacity: 0.7;">Départ</small><br>
+                                    <strong>{{ ride.departure }}</strong>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--border-radius); align-items: center;">
+                                <span style="font-size: 1.2rem;"></span>
+                                <div>
+                                    <small style="opacity: 0.7;">Destination</small><br>
+                                    <strong>{{ ride.destination }}</strong>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--border-radius); align-items: center;">
+                                <span style="font-size: 1.2rem;"></span>
+                                <div>
+                                    <small style="opacity: 0.7;">Date et heure</small><br>
+                                    <strong>{{ ride.departureTime|date('d/m/Y à H:i') }}</strong>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--border-radius); align-items: center;">
+                                <span style="font-size: 1.2rem;"></span>
+                                <div>
+                                    <small style="opacity: 0.7;">Places disponibles</small><br>
+                                    <strong>{{ ride.availableSeats }} place{% if ride.availableSeats != 1 %}s{% endif %}</strong>
+                                </div>
+                            </div>
+                            {% if ride.notes %}
+                                <div style="display: flex; gap: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--border-radius); align-items: flex-start;">
+                                    <span style="font-size: 1.2rem; margin-top: 0.1rem;"></span>
+                                    <div>
+                                        <small style="opacity: 0.7;">Informations supplémentaires</small><br>
+                                        <strong>{{ ride.notes }}</strong>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Conducteur Info -->
+                    <div class="mb-4">
+                        <h5 style="color: var(--text-primary); margin-bottom: 1rem;">Conducteur</h5>
+                        <div style="padding: 1rem; background: var(--bg-secondary); border-radius: var(--border-radius); border-left: 4px solid var(--accent);">
+                            <p class="mb-2"><strong>{{ ride.driver.name }}</strong></p>
+                            {% if ride.driver.carModel %}
+                                <p class="mb-0"><strong>Voiture :</strong> {{ ride.driver.carModel }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Passagers -->
+                    {% if ride.passengers|length > 0 %}
+                        <div class="mb-4">
+                            <h5 style="color: var(--text-primary); margin-bottom: 1rem;">Passagers inscrits ({{ ride.passengers|length }})</h5>
+                            <ul class="list-group" style="list-style: none; padding: 0; margin: 0;">
+                                {% for passenger in ride.passengers %}
+                                    <li class="list-group-item" style="padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--border-radius); margin-bottom: 0.5rem; border: none;">
+                                        {{ passenger.name }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="mt-4">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            {% if app.user and ride.driver != app.user and not ride.passengers.contains(app.user) and ride.availableSeats > 0 %}
+                                <button type="button" id="bookActionButton" class="btn btn-success flex-grow-1" data-book-url="{{ path('app_ride_book', {'id': ride.id}) }}" data-bs-toggle="modal" data-bs-target="#bookConfirmModal">
+                                    Réserver une place
+                                </button>
+                            {% elseif app.user and ride.passengers.contains(app.user) %}
+                                <button type="button" id="cancelActionButton" class="btn btn-outline-danger flex-grow-1" data-cancel-url="{{ path('app_ride_cancel', {'id': ride.id}) }}" data-bs-toggle="modal" data-bs-target="#cancelConfirmModal">
+                                    Annuler ma réservation
+                                </button>
+                            {% elseif not app.user %}
+                                <div class="alert alert-info w-100 mb-0 d-flex align-items-center">
+                                    <span style="margin-right: 0.5rem; font-size: 1.1rem;"></span>
+                                    <a href="{{ path('app_login') }}" style="color: inherit;">Connectez-vous pour réserver</a>
+                                </div>
+                            {% endif %}
+                            {% if ride.availableSeats <= 0 %}
+                                <div class="alert alert-danger w-100 mb-0 d-flex align-items-center flex-grow-1">
+                                    <span style="margin-right: 0.5rem; font-size: 1.1rem;"></span>
+                                    <strong>Ce trajet est complet</strong>
+                                </div>
+                            {% endif %}
+                            <a href="{{ path('app_ride_index') }}" class="btn btn-secondary" style="display: flex; justify-content: center; align-items: center;">Retour</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal fade" id="bookConfirmModal" tabindex="-1" aria-labelledby="bookConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <span class="modal-icon modal-icon-success" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="8" cy="8" r="6" />
+                            <path d="M5.2 8.2l1.6 1.6 3.8-3.8" />
+                        </svg>
+                    </span>
+                    <h5 class="modal-title" id="bookConfirmModalLabel">Confirmer la réservation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Vous êtes sur le point de réserver une place pour ce trajet.</p>
+                    <p class="text-muted">Un email sera envoyé au conducteur avec vos coordonnées.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <a id="confirmBookButton" class="btn btn-success" href="#">Confirmer la réservation</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="cancelConfirmModal" tabindex="-1" aria-labelledby="cancelConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <span class="modal-icon modal-icon-warning" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 3.5L2 13h12L8 3.5z" />
+                            <line x1="8" y1="6.5" x2="8" y2="9.5" />
+                            <circle cx="8" cy="11.5" r="0.5" />
+                        </svg>
+                    </span>
+                    <h5 class="modal-title" id="cancelConfirmModalLabel">Annuler la réservation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir annuler votre réservation pour ce trajet ?</p>
+                    <p class="text-muted">Cette action libérera immédiatement la place pour d'autres passagers.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Non, conserver</button>
+                    <a id="confirmCancelButton" class="btn btn-danger" href="#">Oui, annuler</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function initRideShowModals() {
+            const confirmBookButton = document.getElementById('confirmBookButton');
+            const bookActionButton = document.getElementById('bookActionButton');
+            const confirmCancelButton = document.getElementById('confirmCancelButton');
+            const cancelActionButton = document.getElementById('cancelActionButton');
+
+            if (bookActionButton && confirmBookButton) {
+                bookActionButton.addEventListener('click', function() {
+                    confirmBookButton.href = this.getAttribute('data-book-url');
+                });
+            }
+
+            if (cancelActionButton && confirmCancelButton) {
+                cancelActionButton.addEventListener('click', function() {
+                    confirmCancelButton.href = this.getAttribute('data-cancel-url');
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initRideShowModals);
+        document.addEventListener('turbo:load', initRideShowModals);
+    </script>
+</div>
+{% endblock %}

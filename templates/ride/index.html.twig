@@ -1,0 +1,152 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Trajets disponibles{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <h1 style="margin: 0; font-size: 2rem; color: var(--text-primary);">Trajets disponibles</h1>
+                {% if is_granted('ROLE_USER') and app.user.hasCar %}
+                    <a href="{{ path('app_ride_new') }}" class="btn btn-success" style="margin-left: auto;">Proposer un trajet</a>
+                {% endif %}
+            </div>
+            <p class="text-muted mt-2">Découvrez les trajets disponibles et réservez votre place</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <input 
+                type="text" 
+                id="searchDestination" 
+                class="form-control" 
+                placeholder="Rechercher par destination..." 
+                style="padding: 0.75rem; border: 1px solid var(--border-color);"
+            >
+        </div>
+    </div>
+
+    {% if rides is empty %}
+        <div class="alert alert-info d-flex align-items-center">
+            <span style="margin-right: 0.5rem; font-size: 1.2rem;"></span>
+            <div>
+                <strong>Aucun trajet disponible pour le moment</strong><br>
+                <small>Revenez plus tard ou proposez votre propre trajet si vous avez une voiture</small>
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+            {% for ride in rides %}
+                <div class="col-lg-6 col-md-12 mb-4" data-destination="{{ ride.destination }}" data-departure="{{ ride.departure }}">
+                    <div class="card h-100">
+                        <div class="card-body" style="display: flex; flex-direction: column;">
+                            <div style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 1rem;">
+                                <h5 class="card-title" style="margin: 0; flex: 1;">
+                                    {{ ride.departure }} <span style="opacity: 0.6;">→</span>{{ ride.destination }}
+                                </h5>
+                                {% if ride.availableSeats > 2 %}
+                                    <span class="badge bg-success">{{ ride.availableSeats }} places libres</span>
+                                {% elseif ride.availableSeats > 0 %}
+                                    <span class="badge bg-warning">{{ ride.availableSeats }} places</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Complet</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-grid gap-2" style="font-size: 0.95rem; gap: 0.75rem !important; margin-bottom: 1.5rem;">
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <span style="width: 1.5rem; text-align: center;"></span>
+                                    <span><strong>Départ :</strong> {{ ride.departureTime|date('d/m/Y à H:i') }}</span>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <span style="width: 1.5rem; text-align: center;"></span>
+                                    <span><strong>Conducteur :</strong> {{ ride.driver.name }}</span>
+                                </div>
+                                {% if ride.driver.carModel %}
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <span style="width: 1.5rem; text-align: center;"></span>
+                                        <span><strong>Voiture :</strong> {{ ride.driver.carModel }}</span>
+                                    </div>
+                                {% endif %}
+                                {% if ride.notes %}
+                                    <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+                                        <span style="width: 1.5rem; text-align: center; margin-top: 0.2rem;"></span>
+                                        <span><strong>Infos :</strong> {{ ride.notes|slice(0, 50) }}{% if ride.notes|length > 50 %}...{% endif %}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <a href="{{ path('app_ride_show', {'id': ride.id}) }}" class="btn btn-primary w-100" style="margin-top: auto;">
+                                Voir les détails
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function initSearch() {
+        const searchInput = document.getElementById('searchDestination');
+        const rideCards = document.querySelectorAll('[data-destination]');
+
+        if (!searchInput) return;
+
+        searchInput.removeEventListener('input', handleSearch);
+        searchInput.addEventListener('input', handleSearch);
+
+        function handleSearch() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            rideCards.forEach(card => {
+                const destination = card.getAttribute('data-destination').toLowerCase();
+                const departure = card.getAttribute('data-departure').toLowerCase();
+
+                // Amélioration de l'algorithme de recherche :
+                // 1. Cherche les mots complets qui commencent par le terme
+                // 2. Cherche aussi les mots contenus dans le terme
+                const searchTerms = searchTerm.split(/\s+/).filter(t => t.length > 0);
+                
+                let matches = false;
+                if (searchTerm === '') {
+                    matches = true;
+                } else {
+                    matches = searchTerms.some(term => {
+                        return destination.includes(term) || departure.includes(term);
+                    });
+                }
+
+                if (matches) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Afficher un message si aucun résultat
+            let noResultsMsg = document.getElementById('noSearchResults');
+            if (visibleCount === 0 && searchTerm !== '') {
+                if (!noResultsMsg) {
+                    noResultsMsg = document.createElement('div');
+                    noResultsMsg.id = 'noSearchResults';
+                    noResultsMsg.className = 'alert alert-warning mt-3';
+                    noResultsMsg.textContent = '❌ Aucun trajet ne correspond à votre recherche.';
+                    document.querySelector('.row:last-of-type').before(noResultsMsg);
+                }
+                noResultsMsg.style.display = 'block';
+            } else if (noResultsMsg) {
+                noResultsMsg.style.display = 'none';
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initSearch);
+    document.addEventListener('turbo:load', initSearch);
+</script>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profil{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Mon Profil</h3>
+                    <p class="text-muted mb-0 mt-2" style="font-size: 0.9rem;">Gérez vos informations personnelles et votre voiture</p>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <!-- Informations personnelles -->
+                        <div class="mb-4">
+                            <h5 style="color: var(--text-primary); margin-bottom: 1rem;">Informations personnelles</h5>
+                            
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Nom complet</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="name" 
+                                       name="name" 
+                                       value="{{ user.name }}" 
+                                       required
+                                       aria-describedby="nameHelp">
+                                <small id="nameHelp" class="form-text text-muted">Le nom qui s'affichera pour les autres utilisateurs</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Adresse email</label>
+                                <input type="email" 
+                                       class="form-control" 
+                                       id="email" 
+                                       name="email" 
+                                       value="{{ user.email }}" 
+                                       readonly
+                                       style="background-color: var(--bg-secondary);">
+                                <small class="form-text text-muted">Votre adresse email ne peut pas être modifiée</small>
+                            </div>
+                        </div>
+
+                        <!-- Informations sur la voiture -->
+                        <div class="mb-4">
+                            <h5 style="color: var(--text-primary); margin-bottom: 1rem;">Information sur votre voiture</h5>
+                            
+                            <div class="form-check" style="padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--border-radius); margin-bottom: 1rem;">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="has_car" 
+                                       name="has_car" 
+                                       value="1"
+                                       style="margin-left: 0em;" 
+                                       {{ user.hasCar ? 'checked' : '' }}
+                                       aria-describedby="hasCarHelp">
+                                <label class="form-check-label" for="has_car">
+                                    <strong>J'ai une voiture et je souhaite partager des trajets</strong>
+                                </label>
+                                <small id="hasCarHelp" class="form-text text-muted d-block mt-2">
+                                    Cochez cette case pour pouvoir proposer des trajets et devenir conducteur
+                                </small>
+                            </div>
+
+                            <div id="car_details" style="{{ user.hasCar ? '' : 'display: none;' }}">
+                                <div class="mb-3">
+                                    <label for="car_model" class="form-label">Modèle de voiture</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="car_model" 
+                                           name="car_model" 
+                                           value="{{ user.carModel }}"
+                                           placeholder=""
+                                           aria-describedby="carModelHelp">
+                                    <small id="carModelHelp" class="form-text text-muted">Entrez le modèle de votre véhicule</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="available_seats" class="form-label">Nombre de places disponibles</label>
+                                    <div style="display: flex; gap: 1rem; align-items: flex-end;">
+                                        <div style="flex: 1;">
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   id="available_seats" 
+                                                   name="available_seats" 
+                                                   value="{{ user.availableSeats }}" 
+                                                   min="1" 
+                                                   max="8"
+                                                   aria-describedby="seatsHelp">
+                                            <small id="seatsHelp" class="form-text text-muted">Entre 1 et 8 places (en plus du conducteur)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a href="{{ path('app_ride_index') }}" class="btn btn-secondary">Retour</a>
+                            <button type="button" id="submit_button" class="btn btn-primary" style="font-weight: 500;">Enregistrer les modifications</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal confirmation enregistrement profil -->
+<div class="modal fade" id="profileConfirmModal" tabindex="-1" aria-labelledby="profileConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="profileConfirmModalLabel">Confirmer la mise à jour</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Vous êtes sur le point de mettre à jour votre profil.</p>
+                <p class="text-muted">Vérifiez bien vos informations avant de confirmer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" id="confirmProfileSave" class="btn btn-primary">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function checkForm() {
+    const name = document.getElementById('name').value.trim();
+    const hasCar = document.getElementById('has_car').checked;
+    const carModel = document.getElementById('car_model').value.trim();
+    const availableSeats = document.getElementById('available_seats').value;
+    let disabled = false;
+    if (name === '') {
+        disabled = true;
+    } else if (hasCar && (carModel === '' || availableSeats === '')) {
+        disabled = true;
+    }
+    document.getElementById('submit_button').disabled = disabled;
+}
+
+document.getElementById('has_car').addEventListener('change', function() {
+    const carDetails = document.getElementById('car_details');
+    carDetails.style.display = this.checked ? 'block' : 'none';
+    checkForm();
+});
+
+document.getElementById('available_seats').addEventListener('input', function() {
+    let value = parseInt(this.value);
+    if (isNaN(value) || value < 1) {
+        this.value = null;
+    } else if (value > 8) {
+        this.value = 8;
+    }
+    checkForm();
+});
+
+document.getElementById('name').addEventListener('input', checkForm);
+document.getElementById('car_model').addEventListener('input', checkForm);
+
+const form = document.querySelector('form');
+const submitButton = document.getElementById('submit_button');
+const confirmProfileSave = document.getElementById('confirmProfileSave');
+
+if (submitButton) {
+    submitButton.addEventListener('click', function() {
+        const modal = new bootstrap.Modal(document.getElementById('profileConfirmModal'));
+        modal.show();
+    });
+}
+
+if (confirmProfileSave) {
+    confirmProfileSave.addEventListener('click', function() {
+        form.submit();
+    });
+}
+
+// Appeler checkForm au chargement de la page
+checkForm();
+</script>
+{% endblock %}

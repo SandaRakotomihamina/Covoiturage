@@ -1,0 +1,138 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accueil{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <!-- Welcome Section -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <h1 style="font-size: 2.5rem; color: var(--text-primary); margin-bottom: 0.5rem;">
+                Bienvenue, {{ user.name }}!
+            </h1>
+            <p class="text-muted" style="font-size: 1.1rem;">
+                Prêt à partager ou à réserver un trajet?
+            </p>
+        </div>
+    </div>
+
+    <!-- User Status Cards -->
+    <div class="row mb-5">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    {% if user.hasCar %}
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="font-size: 2rem;"></div>
+                            <div>
+                                <h5 class="card-title" style="margin: 0;">Vous êtes conducteur</h5>
+                                <p class="text-muted mb-2">{{ user.carModel }} avec {{ user.availableSeats }} place{% if user.availableSeats != 1 %}s{% endif %}</p>
+                                <a href="{{ path('app_ride_new') }}" class="btn btn-sm btn-success">Proposer un trajet</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="font-size: 2rem;"></div>
+                            <div>
+                                <h5 class="card-title" style="margin: 0;">Vous êtes passager</h5>
+                                <p class="text-muted mb-2">Réservez des trajets disponibles</p>
+                                <a href="{{ path('app_profile') }}" class="btn btn-sm btn-primary">Ajouter une voiture</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="font-size: 2rem;"></div>
+                        <div>
+                            <h5 class="card-title" style="margin: 0;">Mes trajets</h5>
+                            <p class="text-muted mb-2">Consultez vos trajets actuels</p>
+                            <a href="{{ path('app_my_rides') }}" class="btn btn-sm btn-secondary">Voir mes trajets</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Rides Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0; color: var(--text-primary);">Trajets suggérés (pour vous)</h2>
+            </div>
+        </div>
+    </div>
+
+    {% if rides is empty %}
+        <div class="row mb-5">
+            <div class="col-md-12">
+                <div class="alert alert-info d-flex align-items-center">
+                    <span style="margin-right: 0.5rem; font-size: 1.2rem;">ℹ</span>
+                    <div>
+                        <strong>Aucun trajet suggéré actuellement</strong><br>
+                        <small>Nous n'avons pas trouvé de trajets correspondant à votre historique. Consultez la liste complète des trajets disponibles ou proposez le vôtre si vous avez une voiture</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row mb-5">
+            {% for ride in rides %}
+                <div class="col-lg-6 col-md-12 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 1rem;">
+                                <h5 class="card-title" style="margin: 0; flex: 1;">
+                                    {{ ride.departure }} <span style="opacity: 0.6;">→</span> {{ ride.destination }}
+                                </h5>
+                                {% if ride.availableSeats > 2 %}
+                                    <span class="badge bg-success">{{ ride.availableSeats }} libres</span>
+                                {% elseif ride.availableSeats > 0 %}
+                                    <span class="badge bg-warning">{{ ride.availableSeats }} place</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Complet</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-grid gap-2" style="gap: 0.75rem !important; margin-bottom: 1.5rem;">
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <span style="width: 1.5rem; text-align: center;"></span>
+                                    <span><strong>{{ ride.departureTime|date('d/m/Y à H:i') }}</strong></span>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <span style="width: 1.5rem; text-align: center;"></span>
+                                    <span>{{ ride.driver.name }}{% if ride.driver.carModel %}<br><small style="opacity: 0.7;">{{ ride.driver.carModel }}</small>{% endif %}</span>
+                                </div>
+                            </div>
+
+                            <a href="{{ path('app_ride_show', {'id': ride.id}) }}" class="btn btn-primary w-100">
+                                Voir les détails
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <div style="text-align: center; padding: 2rem; background: var(--bg-secondary); border-radius: var(--border-radius);">
+                <h3 style="margin-bottom: 1rem;">Besoin d'aide?</h3>
+                <p class="text-muted mb-3">Explorez tous les trajets ou gérez votre profil</p>
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <a href="{{ path('app_ride_index') }}" class="btn btn-primary">Voir tous les trajets</a>
+                    <a href="{{ path('app_profile') }}" class="btn btn-secondary">Mon profil</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

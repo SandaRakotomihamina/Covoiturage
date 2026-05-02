@@ -1,0 +1,125 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes trajets{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <h1 style="margin: 0; font-size: 2rem; color: var(--text-primary);">Mes trajets</h1>
+                {% if is_granted('ROLE_USER') and app.user.hasCar %}
+                    <a href="{{ path('app_ride_new') }}" class="btn btn-success" style="margin-left: auto;">Proposer un trajet</a>
+                {% endif %}
+            </div>
+            <p class="text-muted mt-2">Vos trajets en tant que conducteur et passager</p>
+        </div>
+    </div>
+
+    {% if rides is empty %}
+        <div class="alert alert-info d-flex align-items-center">
+            <span style="margin-right: 0.5rem; font-size: 1.2rem;"></span>
+            <div>
+                <strong>Vous n'avez aucun trajet</strong><br>
+                <small>{% if app.user.hasCar %}Proposez un trajet ou{% endif %} Recherchez et réservez un trajet disponible</small>
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+            {% for ride in rides %}
+                <div class="col-lg-6 col-md-12 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 1rem;">
+                                <h5 class="card-title" style="margin: 0; flex: 1;">
+                                    {{ ride.departure }} <span style="opacity: 0.6;">→</span>{{ ride.destination }}
+                                </h5>
+                                {% if ride.driver == app.user %}
+                                    <span class="badge bg-primary">Conducteur</span>
+                                {% else %}
+                                    <span class="badge bg-success">Passager</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-grid gap-2" style="gap: 0.75rem !important; margin-bottom: 1.5rem;">
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <span style="width: 1.5rem; text-align: center;"></span>
+                                    <span><strong>Départ :</strong> {{ ride.departureTime|date('d/m/Y à H:i') }}</span>
+                                </div>
+                                {% if ride.driver == app.user %}
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <span style="width: 1.5rem; text-align: center;"></span>
+                                        <span><strong>Passagers :</strong> {{ ride.passengers|length }}/{{ ride.availableSeats + ride.passengers|length }}</span>
+                                    </div>
+                                {% else %}
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <span style="width: 1.5rem; text-align: center;"></span>
+                                        <span><strong>Conducteur :</strong> {{ ride.driver.name }}</span>
+                                    </div>
+                                    {% if ride.driver.carModel %}
+                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                            <span style="width: 1.5rem; text-align: center;"></span>
+                                            <span><strong>Voiture :</strong> {{ ride.driver.carModel }}</span>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a href="{{ path('app_ride_show', {'id': ride.id}) }}" class="btn btn-primary flex-grow-1">Voir les détails</a>
+                                {% if ride.driver != app.user and ride.passengers.contains(app.user) %}
+                                    <button type="button" class="btn btn-outline-danger flex-grow-1 cancel-reservation-btn" data-cancel-url="{{ path('app_ride_cancel', {'id': ride.id}) }}" data-bs-toggle="modal" data-bs-target="#cancelReservationModal">
+                                        Annuler
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="modal fade" id="cancelReservationModal" tabindex="-1" aria-labelledby="cancelReservationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <span class="modal-icon modal-icon-danger" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="8" cy="8" r="6" />
+                            <path d="M5.25 5.25l5.5 5.5M10.75 5.25l-5.5 5.5" />
+                        </svg>
+                    </span>
+                    <h5 class="modal-title" id="cancelReservationModalLabel">Annuler la réservation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir annuler cette réservation ?</p>
+                    <p class="text-muted">La place sera immédiatement libérée pour d'autres passagers.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Non, conserver</button>
+                    <a id="confirmCancelReservationButton" class="btn btn-danger" href="#">Oui, annuler</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function initRideMyRidesModals() {
+            document.querySelectorAll('.cancel-reservation-btn').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const cancelUrl = this.getAttribute('data-cancel-url');
+                    const confirmButton = document.getElementById('confirmCancelReservationButton');
+                    if (confirmButton) {
+                        confirmButton.href = cancelUrl;
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initRideMyRidesModals);
+        document.addEventListener('turbo:load', initRideMyRidesModals);
+    </script>
+</div>
+{% endblock %}
