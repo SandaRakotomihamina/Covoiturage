@@ -13,11 +13,24 @@
                 </div>
                 <div class="card-body">
                     {% if error %}
+                        {% set loginError = error.messageKey|trans(error.messageData, 'security') %}
+                        {% set customError = '' %}
+
+                        {% if error.messageKey == 'Invalid credentials.' or error.messageKey == 'Bad credentials.' %}
+                            {% set customError = 'Adresse email ou mot de passe incorrect(e). Vérifiez vos informations.' %}
+                        {% elseif error.messageKey == 'Email could not be found.' %}
+                            {% set customError = 'Adresse email introuvable. Vérifiez votre saisie.' %}
+                        {% elseif error.messageKey == 'csrf_token_invalid' or error.messageKey == 'CSRF token invalid.' %}
+                            {% set customError = 'Erreur de sécurité détectée. Rechargez la page et réessayez.' %}
+                        {% else %}
+                            {% set customError = loginError %}
+                        {% endif %}
+
                         <div class="alert alert-danger d-flex align-items-flex-start">
                             <span style="margin-right: 0.5rem; font-size: 1.1rem; margin-top: 0.2rem;"></span>
                             <div>
                                 <strong>Erreur de connexion</strong><br>
-                                <small>{{ error.messageKey|trans(error.messageData, 'security') }}</small>
+                                <small>{{ customError }}</small>
                             </div>
                         </div>
                     {% endif %}
@@ -64,7 +77,7 @@
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
                         <div class="d-grid">
-                            <button class="btn btn-primary" type="submit" style="font-weight: 500; padding: 0.75rem;">
+                            <button class="btn btn-primary" type="submit" style="font-weight: 500; padding: 0.75rem;" disabled>
                                 Se connecter
                             </button>
                         </div>
@@ -132,6 +145,19 @@
         const passwordInput = document.getElementById('inputPassword');
         const togglePasswordBtn = document.getElementById('togglePassword');
         const emailError = document.getElementById('emailError');
+        const submitButton = document.querySelector('#loginForm button[type="submit"]');
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        function updateSubmitButtonState() {
+            const email = emailInput ? emailInput.value.trim() : '';
+            const password = passwordInput ? passwordInput.value.trim() : '';
+            const emailIsValid = emailRegex.test(email);
+            const passwordIsValid = password.length > 0;
+            if (submitButton) {
+                submitButton.disabled = !(emailIsValid && passwordIsValid);
+            }
+        }
 
         // Floating input handler
         const floatingInputs = document.querySelectorAll('.floating-input');
@@ -155,6 +181,7 @@
             });
             input.addEventListener('input', function() {
                 this.classList.toggle('has-value', !!this.value);
+                updateSubmitButtonState();
             });
         });
 
@@ -192,8 +219,19 @@
                     this.classList.remove('invalid-input');
                     emailError.style.display = 'none';
                 }
+
+                updateSubmitButtonState();
             });
         }
+
+        if (passwordInput && !passwordInput.dataset.passwordAttached) {
+            passwordInput.dataset.passwordAttached = 'true';
+            passwordInput.addEventListener('input', function() {
+                updateSubmitButtonState();
+            });
+        }
+
+        updateSubmitButtonState();
     }
 
     if (document.readyState === 'loading') {

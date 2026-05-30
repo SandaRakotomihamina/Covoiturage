@@ -45,7 +45,7 @@
                         <!-- Informations sur la voiture -->
                         <div class="mb-4">
                             <h5 style="color: var(--text-primary); margin-bottom: 1rem;">Information sur votre voiture</h5>
-                            
+
                             <div class="form-check" style="padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--border-radius); margin-bottom: 1rem;">
                                 <input class="form-check-input" 
                                        type="checkbox" 
@@ -59,38 +59,42 @@
                                     <strong>J'ai une voiture et je souhaite partager des trajets</strong>
                                 </label>
                                 <small id="hasCarHelp" class="form-text text-muted d-block mt-2">
-                                    Cochez cette case pour pouvoir proposer des trajets et devenir conducteur
+                                    Cochez cette case pour afficher le pop-up de saisie des informations du véhicule.
                                 </small>
                             </div>
 
-                            <div id="car_details" style="{{ user.hasCar ? '' : 'display: none;' }}">
-                                <div class="mb-3">
-                                    <label for="car_model" class="form-label">Modèle de voiture</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="car_model" 
-                                           name="car_model" 
-                                           value="{{ user.carModel }}"
-                                           placeholder=""
-                                           aria-describedby="carModelHelp">
-                                    <small id="carModelHelp" class="form-text text-muted">Entrez le modèle de votre véhicule</small>
+                            <div id="car_summary" style="{{ user.hasCar ? '' : 'display: none;' }}">
+                                <div class="alert alert-secondary py-2">
+                                    <p class="mb-1"><strong>Modèle :</strong> <span id="car_model_summary">{{ user.carModel }}</span></p>
+                                    <p class="mb-0"><strong>Places disponibles :</strong> <span id="available_seats_summary">{{ user.availableSeats }}</span></p>
                                 </div>
+                            </div>
 
+                            <input type="hidden" name="car_model" id="car_model" value="{{ user.carModel }}">
+                            <input type="hidden" name="available_seats" id="available_seats" value="{{ user.availableSeats }}">
+                        </div>
+
+                        <!-- Changer le mot de passe -->
+                        <div class="mb-4">
+                            <h5 style="color: var(--text-primary); margin-bottom: 1rem;">Sécurité</h5>
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="change_password" name="change_password" value="1">
+                                <label class="form-check-label" for="change_password">
+                                    Modifier le mot de passe
+                                </label>
+                            </div>
+
+                            <div id="password_section" style="display: none;">
                                 <div class="mb-3">
-                                    <label for="available_seats" class="form-label">Nombre de places disponibles</label>
-                                    <div style="display: flex; gap: 1rem; align-items: flex-end;">
-                                        <div style="flex: 1;">
-                                            <input type="number" 
-                                                   class="form-control" 
-                                                   id="available_seats" 
-                                                   name="available_seats" 
-                                                   value="{{ user.availableSeats }}" 
-                                                   min="1" 
-                                                   max="8"
-                                                   aria-describedby="seatsHelp">
-                                            <small id="seatsHelp" class="form-text text-muted">Entre 1 et 8 places (en plus du conducteur)</small>
-                                        </div>
-                                    </div>
+                                    <label for="new_password" class="form-label">Nouveau mot de passe</label>
+                                    <input type="password"
+                                           class="form-control"
+                                           id="new_password"
+                                           name="new_password"
+                                           autocomplete="new-password"
+                                           placeholder="Entrez votre nouveau mot de passe">
+                                    <small class="form-text text-muted">Saisissez un nouveau mot de passe si vous souhaitez le changer.</small>
                                 </div>
                             </div>
                         </div>
@@ -98,7 +102,7 @@
                         <!-- Actions -->
                         <div class="d-grid gap-2 d-md-flex justify-content-md-between">
                             <a href="{{ path('app_ride_index') }}" class="btn btn-secondary">Retour</a>
-                            <button type="button" id="submit_button" class="btn btn-primary" style="font-weight: 500;">Enregistrer les modifications</button>
+                            <button type="button" id="submit_button" class="btn btn-primary" style="font-weight: 500;" disabled>Enregistrer les modifications</button>
                         </div>
                     </form>
                 </div>
@@ -107,8 +111,7 @@
     </div>
 </div>
 
-<!-- Modal confirmation enregistrement profil -->
-<div class="modal fade" id="profileConfirmModal" tabindex="-1" aria-labelledby="profileConfirmModalLabel" aria-hidden="true">
+<div class="modal fade" id="profileConfirmModal" tabindex="-1" aria-labelledby="profileConfirmModalLabel" aria-hidden="true" style="z-index: 2000;">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0">
@@ -116,69 +119,270 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
             <div class="modal-body">
-                <p>Vous êtes sur le point de mettre à jour votre profil.</p>
-                <p class="text-muted">Vérifiez bien vos informations avant de confirmer.</p>
+                <p>Pour confirmer vos modifications, saisissez votre mot de passe actuel.</p>
+                <div class="mb-3">
+                    <label for="confirm_password" class="form-label">Mot de passe</label>
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" autocomplete="current-password">
+                </div>
+                <p class="text-muted" style="font-size: 0.75rem;">Si vous changez votre mot de passe, indiquez votre ancien mot de passe.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" id="confirmProfileSave" class="btn btn-primary">Confirmer</button>
+                <button type="button" id="confirmProfileSave" class="btn btn-primary" disabled>Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de saisie des informations voiture -->
+<div class="modal fade" id="carInfoModal" tabindex="-1" aria-labelledby="carInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="carInfoModalLabel">Informations sur votre voiture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Complétez les informations de votre véhicule pour pouvoir proposer des trajets.</p>
+                <div class="mb-3">
+                    <label for="car_info_model" class="form-label">Modèle de voiture</label>
+                    <input type="text" class="form-control" id="car_info_model" placeholder="Ex: Renault Clio">
+                </div>
+                <div class="mb-3">
+                    <label for="car_info_seats" class="form-label">Nombre de places disponibles</label>
+                    <input type="number" class="form-control" id="car_info_seats" min="1" max="8" placeholder="1">
+                    <small class="form-text text-muted">Entre 1 et 8 places (en plus du conducteur)</small>
+                </div>
+                <div id="carInfoError" class="text-danger small" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cancelCarInfo" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" id="saveCarInfo" class="btn btn-primary">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="removeCarModal" tabindex="-1" aria-labelledby="removeCarModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="removeCarModalLabel">Supprimer les informations voiture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Si vous décochez cette option, les informations de votre voiture seront supprimées.</p>
+                <p class="text-muted">Voulez-vous continuer ?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cancelRemoveCar" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" id="confirmRemoveCar" class="btn btn-danger">Confirmer</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function checkForm() {
-    const name = document.getElementById('name').value.trim();
-    const hasCar = document.getElementById('has_car').checked;
-    const carModel = document.getElementById('car_model').value.trim();
-    const availableSeats = document.getElementById('available_seats').value;
-    let disabled = false;
-    if (name === '') {
-        disabled = true;
-    } else if (hasCar && (carModel === '' || availableSeats === '')) {
-        disabled = true;
+document.addEventListener('DOMContentLoaded', function () {
+    const nameInput = document.getElementById('name');
+    const hasCarCheckbox = document.getElementById('has_car');
+    const carModelInput = document.getElementById('car_model');
+    const availableSeatsInput = document.getElementById('available_seats');
+    const carSummary = document.getElementById('car_summary');
+    const carModelSummary = document.getElementById('car_model_summary');
+    const availableSeatsSummary = document.getElementById('available_seats_summary');
+    const changePasswordCheckbox = document.getElementById('change_password');
+    const passwordSection = document.getElementById('password_section');
+    const newPasswordInput = document.getElementById('new_password');
+    const submitButton = document.getElementById('submit_button');
+    const form = document.querySelector('form');
+    const confirmProfileSave = document.getElementById('confirmProfileSave');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const carInfoModalElement = document.getElementById('carInfoModal');
+    const removeCarModalElement = document.getElementById('removeCarModal');
+    const carInfoModal = new bootstrap.Modal(carInfoModalElement);
+    const removeCarModal = new bootstrap.Modal(removeCarModalElement);
+    const carInfoModel = document.getElementById('car_info_model');
+    const carInfoSeats = document.getElementById('car_info_seats');
+    const carInfoError = document.getElementById('carInfoError');
+    const saveCarInfoButton = document.getElementById('saveCarInfo');
+    const cancelCarInfoButton = document.getElementById('cancelCarInfo');
+    const confirmRemoveCar = document.getElementById('confirmRemoveCar');
+
+    const initialState = {
+        name: nameInput ? nameInput.value.trim() : '',
+        hasCar: hasCarCheckbox ? hasCarCheckbox.checked : false,
+        carModel: carModelInput ? carModelInput.value.trim() : '',
+        availableSeats: availableSeatsInput ? availableSeatsInput.value.trim() : '',
+        changePassword: false,
+        newPassword: ''
+    };
+
+    let pendingCarChange = null;
+
+    function updateCarSummary() {
+        const model = carModelInput.value.trim();
+        const seats = availableSeatsInput.value.trim();
+        if (hasCarCheckbox.checked && model && seats) {
+            carSummary.style.display = '';
+            carModelSummary.textContent = model;
+            availableSeatsSummary.textContent = seats;
+        } else {
+            carSummary.style.display = 'none';
+        }
     }
-    document.getElementById('submit_button').disabled = disabled;
-}
 
-document.getElementById('has_car').addEventListener('change', function() {
-    const carDetails = document.getElementById('car_details');
-    carDetails.style.display = this.checked ? 'block' : 'none';
-    checkForm();
-});
-
-document.getElementById('available_seats').addEventListener('input', function() {
-    let value = parseInt(this.value);
-    if (isNaN(value) || value < 1) {
-        this.value = null;
-    } else if (value > 8) {
-        this.value = 8;
+    function updatePasswordSection() {
+        if (changePasswordCheckbox.checked) {
+            passwordSection.style.display = 'block';
+            newPasswordInput.disabled = false;
+        } else {
+            passwordSection.style.display = 'none';
+            newPasswordInput.value = '';
+            newPasswordInput.disabled = true;
+        }
     }
-    checkForm();
-});
 
-document.getElementById('name').addEventListener('input', checkForm);
-document.getElementById('car_model').addEventListener('input', checkForm);
+    function getCurrentState() {
+        return {
+            name: nameInput.value.trim(),
+            hasCar: hasCarCheckbox.checked,
+            carModel: carModelInput.value.trim(),
+            availableSeats: availableSeatsInput.value.trim(),
+            changePassword: changePasswordCheckbox.checked,
+            newPassword: newPasswordInput.value.trim()
+        };
+    }
 
-const form = document.querySelector('form');
-const submitButton = document.getElementById('submit_button');
-const confirmProfileSave = document.getElementById('confirmProfileSave');
+    function formHasChanges() {
+        const current = getCurrentState();
+        return current.name !== initialState.name
+            || current.hasCar !== initialState.hasCar
+            || current.carModel !== initialState.carModel
+            || current.availableSeats !== initialState.availableSeats
+            || current.changePassword
+            || current.newPassword !== '';
+    }
 
-if (submitButton) {
-    submitButton.addEventListener('click', function() {
-        const modal = new bootstrap.Modal(document.getElementById('profileConfirmModal'));
-        modal.show();
+    function isCarInfoValid() {
+        if (!hasCarCheckbox.checked) {
+            return true;
+        }
+        return carModelInput.value.trim() !== '' && availableSeatsInput.value.trim() !== '';
+    }
+
+    function isPasswordSectionValid() {
+        if (!changePasswordCheckbox.checked) {
+            return true;
+        }
+        return newPasswordInput.value.trim() !== '';
+    }
+
+    function updateSubmitButtonState() {
+        const nameNotEmpty = nameInput.value.trim() !== '';
+        submitButton.disabled = !nameNotEmpty || !formHasChanges() || !isCarInfoValid() || !isPasswordSectionValid();
+    }
+
+    hasCarCheckbox.addEventListener('change', function () {
+        if (hasCarCheckbox.checked) {
+            pendingCarChange = 'add';
+            carInfoError.style.display = 'none';
+            carInfoModel.value = carModelInput.value.trim();
+            carInfoSeats.value = availableSeatsInput.value.trim();
+            carInfoModal.show();
+        } else {
+            pendingCarChange = 'remove';
+            removeCarModal.show();
+        }
     });
-}
 
-if (confirmProfileSave) {
-    confirmProfileSave.addEventListener('click', function() {
+    carInfoModalElement.addEventListener('hidden.bs.modal', function () {
+        if (pendingCarChange === 'add') {
+            hasCarCheckbox.checked = false;
+            pendingCarChange = null;
+            updateCarSummary();
+            updateSubmitButtonState();
+        }
+    });
+
+    removeCarModalElement.addEventListener('hidden.bs.modal', function () {
+        if (pendingCarChange === 'remove') {
+            hasCarCheckbox.checked = true;
+            pendingCarChange = null;
+            updateCarSummary();
+            updateSubmitButtonState();
+        }
+    });
+
+    saveCarInfoButton.addEventListener('click', function () {
+        const model = carInfoModel.value.trim();
+        const seatsValue = carInfoSeats.value.trim();
+        const seatsNumber = parseInt(seatsValue, 10);
+
+        if (!model) {
+            carInfoError.textContent = 'Le modèle de voiture est requis.';
+            carInfoError.style.display = 'block';
+            return;
+        }
+        if (!seatsValue || isNaN(seatsNumber) || seatsNumber < 1 || seatsNumber > 8) {
+            carInfoError.textContent = 'Le nombre de places doit être compris entre 1 et 8.';
+            carInfoError.style.display = 'block';
+            return;
+        }
+
+        carModelInput.value = model;
+        availableSeatsInput.value = seatsNumber;
+        pendingCarChange = null;
+        carInfoModal.hide();
+        updateCarSummary();
+        updateSubmitButtonState();
+    });
+
+    cancelCarInfoButton.addEventListener('click', function () {
+        hasCarCheckbox.checked = false;
+        pendingCarChange = null;
+        updateCarSummary();
+        updateSubmitButtonState();
+    });
+
+    confirmRemoveCar.addEventListener('click', function () {
+        carModelInput.value = '';
+        availableSeatsInput.value = '';
+        pendingCarChange = null;
+        removeCarModal.hide();
+        updateCarSummary();
+        updateSubmitButtonState();
+    });
+
+    changePasswordCheckbox.addEventListener('change', function () {
+        updatePasswordSection();
+        updateSubmitButtonState();
+    });
+
+    newPasswordInput.addEventListener('input', updateSubmitButtonState);
+    nameInput.addEventListener('input', updateSubmitButtonState);
+
+    submitButton.addEventListener('click', function () {
+        const profileConfirmModal = new bootstrap.Modal(document.getElementById('profileConfirmModal'));
+        confirmPasswordInput.value = '';
+        document.getElementById('confirmProfileSave').disabled = true;
+        profileConfirmModal.show();
+    });
+
+    confirmPasswordInput.addEventListener('input', function () {
+        document.getElementById('confirmProfileSave').disabled = this.value.trim() === '';
+    });
+
+    confirmProfileSave.addEventListener('click', function () {
+        if (confirmPasswordInput.value.trim() === '') {
+            return;
+        }
         form.submit();
     });
-}
 
-// Appeler checkForm au chargement de la page
-checkForm();
+    updateCarSummary();
+    updatePasswordSection();
+    updateSubmitButtonState();
+});
 </script>
 {% endblock %}
