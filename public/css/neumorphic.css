@@ -104,7 +104,7 @@ body {
 
 .card-body {
     padding: 1.5rem !important;
-    color: var(--text-secondary);
+    color: var(--text-primary);
 }
 
 .card-footer {

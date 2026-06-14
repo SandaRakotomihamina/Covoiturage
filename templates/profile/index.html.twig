@@ -68,6 +68,15 @@
                                     <p class="mb-1"><strong>Modèle :</strong> <span id="car_model_summary">{{ user.carModel }}</span></p>
                                     <p class="mb-0"><strong>Places disponibles :</strong> <span id="available_seats_summary">{{ user.availableSeats }}</span></p>
                                 </div>
+                                <div>
+                                    <a id="edit_car_info" class="btn btn-sm btn-outline-primary"
+                                        {% if user.hasCar %}
+                                            style="display: block;"
+                                        {% else %}
+                                            style="display: none;"
+                                        {% endif %}>
+                                    >Modifier les informations de ma voiture</a>
+                                </div>
                             </div>
 
                             <input type="hidden" name="car_model" id="car_model" value="{{ user.carModel }}">
@@ -183,7 +192,7 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+function initProfilePage() {
     const nameInput = document.getElementById('name');
     const hasCarCheckbox = document.getElementById('has_car');
     const carModelInput = document.getElementById('car_model');
@@ -383,6 +392,9 @@ document.addEventListener('DOMContentLoaded', function () {
     updateCarSummary();
     updatePasswordSection();
     updateSubmitButtonState();
-});
+}
+
+document.addEventListener('DOMContentLoaded', initProfilePage);
+document.addEventListener('turbo:load', initProfilePage);
 </script>
 {% endblock %}
