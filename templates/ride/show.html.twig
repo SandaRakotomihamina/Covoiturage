@@ -59,6 +59,10 @@
                     <div class="mb-4">
                         <h5 style="color: var(--text-primary); margin-bottom: 1rem;">Conducteur</h5>
                         <div style="padding: 1rem; background: var(--bg-secondary); border-radius: var(--border-radius); border-left: 4px solid var(--accent);">
+                            {# image voiture conducteur avec fallback #}
+                            <div class="mb-3">
+                                <img src="{{ ride.driver.imageCar ? ride.driver.imageCar : asset('images/default.png') }}" alt="Photo de la voiture de {{ ride.driver.name }}" class="img-fluid rounded car-photo-preview" style="max-width: 180px; object-fit: cover; border: 1px solid var(--border-color);">
+                            </div>
                             <p class="mb-2"><strong>{{ ride.driver.name }}</strong></p>
                             {% if ride.driver.carModel %}
                                 <p class="mb-0"><strong>Voiture :</strong> {{ ride.driver.carModel }}</p>

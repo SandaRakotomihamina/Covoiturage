@@ -33,6 +33,45 @@ body {
     padding: 0;
 }
 
+.theme-dark {
+    background: #111827;
+    color: #e5e7eb;
+}
+
+.theme-dark .navbar,
+.theme-dark .dropdown-menu,
+.theme-dark .card {
+    background: #1f2937 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #e5e7eb;
+}
+
+.theme-dark .btn-secondary {
+    background: #374151 !important;
+    color: #e5e7eb !important;
+}
+
+.theme-dark .form-control {
+    background: #111827;
+    border-color: #374151;
+    color: #e5e7eb;
+}
+
+.theme-dark .form-control:focus {
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.theme-dark .form-check-label,
+.theme-dark .form-label,
+.theme-dark .nav-link,
+.theme-dark .dropdown-item,
+.theme-dark .alert,
+.theme-dark .card-body,
+.theme-dark .card-header,
+.theme-dark .card {
+    color: #e5e7eb;
+}
+
 /* Navbar Neumorphic */
 .navbar {
     background: linear-gradient(135deg, #e0e5ec 0%, #f0f3f8 100%) !important;

@@ -60,6 +60,7 @@
 
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" href="{{ path('app_profile') }}">Profil</a></li>
+                                    <li><a class="dropdown-item" href="{{ path('app_profile_settings') }}">Paramètres du compte</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item logout-link" href="{{ path('app_logout') }}">
@@ -88,6 +89,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
+            {% for message in app.flashes('error') %}
+                <div class="alert alert-danger alert-dismissible fade show flash-message">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
         </div>
 
         {% block body %}{% endblock %}
@@ -111,7 +118,43 @@
             </div>
         </div>
 
+        <!-- Car image preview modal -->
+        <div class="modal fade" id="carImageModal" tabindex="-1" aria-labelledby="carImageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content bg-transparent border-0 shadow-none">
+                    <div class="modal-body p-0">
+                        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        <div class="ratio ratio-16x9">
+                            <img id="carImageModalSrc" src="" alt="Photo agrandie" class="img-fluid rounded" style="object-fit: contain; width: 100%; height: 100%;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% include 'partials/footer.html.twig' %}
+
         <script>
+        function setSiteTheme(theme) {
+            document.body.classList.toggle('theme-dark', theme === 'dark');
+            document.body.classList.toggle('theme-light', theme === 'light');
+        }
+
+        function initCarImagePreview() {
+            const modalElement = document.getElementById('carImageModal');
+            if (!modalElement) return;
+
+            const modal = new bootstrap.Modal(modalElement);
+            const modalImage = document.getElementById('carImageModalSrc');
+            document.querySelectorAll('.car-photo-preview').forEach(image => {
+                image.style.cursor = 'pointer';
+                image.addEventListener('click', () => {
+                    modalImage.src = image.src;
+                    modalImage.alt = image.alt || 'Photo agrandie';
+                    modal.show();
+                });
+            });
+        }
+
         function initUI() {
 
             // ✅ Auto hide flash
@@ -131,6 +174,9 @@
                 };
             });
 
+            // ✅ Car image preview
+            initCarImagePreview();
+
             // ✅ Fix navbar collapse auto close
             document.addEventListener('click', function(e) {
                 const open = document.querySelector('.navbar-collapse.show');
@@ -142,11 +188,17 @@
             });
         }
 
-        // Chargement normal
-        document.addEventListener('DOMContentLoaded', initUI);
+        document.addEventListener('DOMContentLoaded', () => {
+            const theme = localStorage.getItem('siteTheme') || 'light';
+            setSiteTheme(theme);
+            initUI();
+        });
 
-        // 🔥 IMPORTANT pour Symfony + Turbo
-        document.addEventListener('turbo:load', initUI);
+        document.addEventListener('turbo:load', () => {
+            const theme = localStorage.getItem('siteTheme') || 'light';
+            setSiteTheme(theme);
+            initUI();
+        });
         </script>
 
         <style>

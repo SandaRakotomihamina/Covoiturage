@@ -39,6 +39,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $carModel = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $imageCar = null;
+
     #[ORM\Column(type: 'integer', nullable: true, options: ['default' => 0])]
     private ?int $availableSeats = null;
 
@@ -159,6 +162,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCarModel(?string $carModel): static
     {
         $this->carModel = $carModel;
+
+        return $this;
+    }
+
+    public function getImageCar(): ?string
+    {
+        return $this->imageCar;
+    }
+
+    public function setImageCar(?string $imageCar): static
+    {
+        $this->imageCar = $imageCar;
 
         return $this;
     }

@@ -1,0 +1,765 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Paramètres du compte{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h1 class="h3">Paramètres du compte</h1>
+                    <p class="text-muted">Modifiez votre profil, votre mot de passe, l'apparence et gérez votre compte.</p>
+                </div>
+                <a href="{{ path('app_profile') }}" class="btn btn-outline-secondary">Voir mon profil</a>
+            </div>
+
+            <form id="accountSettingsForm" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="save">
+                <input type="hidden" name="confirm_password" id="confirm_password_input" value="">
+                <input type="hidden" name="remove_car_image" id="remove_car_image" value="0">
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Informations du compte</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nom complet</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="name"
+                                   name="name"
+                                   value="{{ user.name }}"
+                                   required
+                                   aria-describedby="nameHelp">
+                            <small id="nameHelp" class="form-text text-muted">Le nom qui s'affichera pour les autres utilisateurs.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Adresse email</label>
+                            <input type="email"
+                                   class="form-control"
+                                   id="email"
+                                   name="email"
+                                   value="{{ user.email }}"
+                                   readonly
+                                   style="background-color: var(--bg-secondary);">
+                        </div>
+
+                        <div class="form-check p-3 rounded" style="background: var(--bg-secondary);">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="has_car"
+                                   name="has_car"
+                                   value="1"
+                                   style="margin-left: 0.3rem;"
+                                   {{ user.hasCar ? 'checked' : '' }}>
+                            <label class="form-check-label" for="has_car">
+                                <strong>J'ai une voiture et je souhaite partager des trajets</strong>
+                            </label>
+                        </div>
+
+                        <div id="car_summary" class="mt-3" style="{{ user.hasCar ? '' : 'display: none;' }}">
+                            <div class="alert alert-secondary py-2 d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if user.imageCar %}
+                                    <div class="mt-3">
+                                        <img src="{{ user.imageCar }}" alt="Photo de la voiture" class="img-fluid rounded" style="max-width: 180px; object-fit: cover; border: 1px solid var(--border-color);">
+                                    </div>
+                                    {% else %}
+                                    <div class="mb-3">
+                                        <img src="{{ asset('images/default.png') }}" alt="Photo de la voiture" class="img-fluid rounded" style="max-width: 180px; object-fit: cover; border: 1px solid var(--border-color);">
+                                    </div>
+                                    {% endif %}
+                                    <p class="mb-1"><strong>Modèle :</strong> <span id="car_model_summary">{{ user.carModel }}</span></p>
+                                    <p class="mb-0"><strong>Places disponibles :</strong> <span id="available_seats_summary">{{ user.availableSeats }}</span></p>
+                                </div>
+                                <button type="button" id="edit_car_info" class="btn btn-sm btn-outline-primary">Modifier</button>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="car_model" id="car_model" value="{{ user.carModel }}">
+                        <input type="hidden" name="available_seats" id="available_seats" value="{{ user.availableSeats }}">
+                        <input type="hidden" id="current_car_image_path" value="{{ user.imageCar }}">
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Sécurité</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="change_password" name="change_password" value="1">
+                            <label class="form-check-label" for="change_password">Modifier le mot de passe</label>
+                        </div>
+
+                        <div id="password_section" style="display: none;">
+                            <div class="mb-3">
+                                <label for="new_password" class="form-label">Nouveau mot de passe</label>
+                                <div style="position: relative;">
+                                    <input type="password"
+                                           class="form-control"
+                                           id="new_password"
+                                           name="new_password"
+                                           autocomplete="new-password"
+                                           placeholder="Entrez votre nouveau mot de passe"
+                                           style="padding-right: 2.5rem;">
+                                    <button type="button" class="btn-toggle-password" id="toggleNewPassword" aria-label="Afficher ou masquer le mot de passe" onclick="toggleNewPasswordVisibility(event)"
+                                            style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 0.5rem; z-index: 10; color: var(--text-secondary); transition: color 0.3s ease;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <!-- Password Strength Bar -->
+                                <div style="margin-top: 0.75rem; overflow: hidden; border-radius: 4px; height: 6px; background-color: var(--bg-secondary);">
+                                    <div id="newPasswordStrength" style="height: 100%; width: 0%; background-color: #dc3545; transition: width 0.3s, background-color 0.3s;"></div>
+                                </div>
+                                <small id="newPasswordStrengthText" class="form-text text-muted" style="margin-top: 0.25rem; display: block;">Force: Faible</small>
+                                <small class="form-text text-muted">Laissez vide si vous ne souhaitez pas changer le mot de passe.</small>
+                            </div>
+                        </div>
+
+                        <div class="form-text text-muted">Toutes les modifications sont confirmées avec votre mot de passe actuel.</div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Apparence</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="theme" id="theme_light" value="light">
+                            <label class="form-check-label" for="theme_light">Thème clair</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="theme" id="theme_dark" value="dark">
+                            <label class="form-check-label" for="theme_dark">Thème sombre</label>
+                        </div>
+                        <small class="form-text text-muted mt-2">Ce choix est enregistré dans votre navigateur.</small>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-between mb-4">
+                    <a href="{{ path('app_ride_index') }}" class="btn btn-secondary">Retour</a>
+                    <button type="button" id="submit_button" class="btn btn-primary" disabled>Enregistrer les modifications</button>
+                </div>
+            </form>
+
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">Suppression du compte</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">La suppression de votre compte est définitive. Toutes vos informations et trajets seront supprimés.</p>
+                    <button type="button" id="delete_account_button" class="btn btn-danger">Supprimer mon compte</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="profileConfirmModal" tabindex="-1" aria-labelledby="profileConfirmModalLabel" aria-hidden="true" style="z-index: 2000;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="profileConfirmModalLabel">Confirmer la mise à jour</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Pour enregistrer vos modifications, saisissez votre mot de passe actuel.</p>
+                <div class="mb-3">
+                    <label for="confirm_password" class="form-label">Mot de passe actuel</label>
+                    <input type="password" class="form-control" id="confirm_password" autocomplete="current-password">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" id="confirmProfileSave" class="btn btn-primary" disabled>Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true" style="z-index: 2000;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="deleteAccountModalLabel">Supprimer le compte</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Cette action est irréversible. Saisissez votre mot de passe actuel pour confirmer.</p>
+                <div class="mb-3">
+                    <label for="delete_confirm_password" class="form-label">Mot de passe actuel</label>
+                    <input type="password" class="form-control" id="delete_confirm_password" autocomplete="current-password">
+                </div>
+                <div id="deleteError" class="text-danger small" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" id="confirmDeleteAccount" class="btn btn-danger">Supprimer mon compte</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="carInfoModal" tabindex="-1" aria-labelledby="carInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="carInfoModalLabel">Informations sur votre voiture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Complétez les informations de votre véhicule pour pouvoir proposer des trajets.</p>
+                <div class="mb-3">
+                    <label for="car_info_model" class="form-label">Modèle de voiture</label>
+                    <input type="text" class="form-control" id="car_info_model" placeholder="">
+                </div>
+                <div class="mb-3">
+                    <label for="car_info_seats" class="form-label">Nombre de places disponibles</label>
+                    <input type="number" class="form-control" id="car_info_seats" min="1" max="8" placeholder="1">
+                    <small class="form-text text-muted">Entre 1 et 8 places (en plus du conducteur)</small>
+                </div>
+                <div class="mb-3">
+                    <label for="car_image" class="form-label">Photo de la voiture</label>
+                    <input class="form-control" type="file" id="car_image" accept="image/png, image/jpeg, image/webp">
+                    <small class="form-text text-muted">La photo sera redimensionnée en carré avant l'envoi.</small>
+                </div>
+                <div id="carImagePreview" class="mt-3" style="display: none;">
+                    <img id="carImagePreviewImg" src="" alt="Aperçu de la voiture" class="img-fluid rounded" style="max-width: 180px; height: auto; object-fit: cover; border: 1px solid var(--border-color);">
+                    <div class="mt-2">
+                        <button type="button" id="removeCarImageButton" class="btn btn-sm btn-outline-danger">Supprimer l'image</button>
+                    </div>
+                </div>
+                <div id="carInfoError" class="text-danger small" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cancelCarInfo" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" id="saveCarInfo" class="btn btn-primary">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="removeCarModal" tabindex="-1" aria-labelledby="removeCarModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="removeCarModalLabel">Supprimer les informations voiture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <p>Si vous décochez cette option, les informations de votre voiture seront supprimées.</p>
+                <p class="text-muted">Voulez-vous continuer ?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cancelRemoveCar" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" id="confirmRemoveCar" class="btn btn-danger">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn-toggle-password:hover {
+    color: var(--accent);
+}
+</style>
+
+<script>
+function calculatePasswordStrength(password) {
+    let strength = 0;
+
+    if (password.length >= 8) strength += 20;
+    if (password.length >= 12) strength += 10;
+    if (/[a-z]/.test(password)) strength += 15;
+    if (/[A-Z]/.test(password)) strength += 15;
+    if (/[0-9]/.test(password)) strength += 15;
+    if (/[^a-zA-Z0-9]/.test(password)) strength += 25;
+
+    return Math.min(strength, 100);
+}
+
+function initAccountSettings() {
+    const nameInput = document.getElementById('name');
+    const hasCarCheckbox = document.getElementById('has_car');
+    const carModelInput = document.getElementById('car_model');
+    const availableSeatsInput = document.getElementById('available_seats');
+    const carSummary = document.getElementById('car_summary');
+    const carModelSummary = document.getElementById('car_model_summary');
+    const availableSeatsSummary = document.getElementById('available_seats_summary');
+    const changePasswordCheckbox = document.getElementById('change_password');
+    const passwordSection = document.getElementById('password_section');
+    const newPasswordInput = document.getElementById('new_password');
+    const submitButton = document.getElementById('submit_button');
+    const form = document.getElementById('accountSettingsForm');
+    const confirmProfileSave = document.getElementById('confirmProfileSave');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const confirmPasswordHidden = document.getElementById('confirm_password_input');
+    const carInfoModalElement = document.getElementById('carInfoModal');
+    const removeCarModalElement = document.getElementById('removeCarModal');
+    const carInfoModal = new bootstrap.Modal(carInfoModalElement);
+    const removeCarModal = new bootstrap.Modal(removeCarModalElement);
+    const carInfoModel = document.getElementById('car_info_model');
+    const carInfoSeats = document.getElementById('car_info_seats');
+    const carInfoError = document.getElementById('carInfoError');
+    const carImageInput = document.getElementById('car_image');
+    const carImagePreview = document.getElementById('carImagePreview');
+    const carImagePreviewImg = document.getElementById('carImagePreviewImg');
+    const removeCarImageButton = document.getElementById('removeCarImageButton');
+    const removeCarImageHidden = document.getElementById('remove_car_image');
+    const saveCarInfoButton = document.getElementById('saveCarInfo');
+    const cancelCarInfoButton = document.getElementById('cancelCarInfo');
+    const confirmRemoveCar = document.getElementById('confirmRemoveCar');
+    const editCarInfo = document.getElementById('edit_car_info');
+    const themeInputs = document.querySelectorAll('input[name="theme"]');
+    const deleteAccountButton = document.getElementById('delete_account_button');
+    const deleteAccountModal = new bootstrap.Modal(document.getElementById('deleteAccountModal'));
+    const deletePasswordInput = document.getElementById('delete_confirm_password');
+    const confirmDeleteAccount = document.getElementById('confirmDeleteAccount');
+    const deleteError = document.getElementById('deleteError');
+    const deleteConfirmPasswordHidden = document.createElement('input');
+    deleteConfirmPasswordHidden.type = 'hidden';
+    deleteConfirmPasswordHidden.name = 'confirm_password';
+    deleteConfirmPasswordHidden.id = 'delete_confirm_password_hidden';
+    deleteConfirmPasswordHidden.value = '';
+    const deleteForm = document.createElement('form');
+    deleteForm.method = 'post';
+    deleteForm.style.display = 'none';
+    deleteForm.appendChild(deleteConfirmPasswordHidden);
+    const deleteActionInput = document.createElement('input');
+    deleteActionInput.type = 'hidden';
+    deleteActionInput.name = 'action';
+    deleteActionInput.value = 'delete_account';
+    deleteForm.appendChild(deleteActionInput);
+    document.body.appendChild(deleteForm);
+
+    const initialState = {
+        name: nameInput ? nameInput.value.trim() : '',
+        hasCar: hasCarCheckbox ? hasCarCheckbox.checked : false,
+        carModel: carModelInput ? carModelInput.value.trim() : '',
+        availableSeats: availableSeatsInput ? availableSeatsInput.value.trim() : '',
+        changePassword: false,
+        newPassword: ''
+    };
+
+    let pendingCarChange = null;
+    let suppressHasCarChange = false;
+    let prevCarModel = '';
+    let prevAvailableSeats = '';
+    let prevHasCar = false;
+
+    // Toggle password visibility
+    window.toggleNewPasswordVisibility = function(e) {
+        e.preventDefault();
+        const passwordInput = document.getElementById('new_password');
+        if (!passwordInput) {
+            return;
+        }
+
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        const svg = document.getElementById('toggleNewPassword')?.querySelector('svg');
+        if (svg) {
+            svg.innerHTML = isPassword
+                ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>'
+                : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+        }
+    };
+
+    // Password strength indicator
+    newPasswordInput.addEventListener('input', function() {
+        const strength = calculatePasswordStrength(this.value);
+        const strengthBar = document.getElementById('newPasswordStrength');
+        const strengthText = document.getElementById('newPasswordStrengthText');
+
+        if (strengthBar) {
+            strengthBar.style.width = strength + '%';
+        }
+        if (strengthText) {
+            if (strength < 40) {
+                strengthText.textContent = '🔴 Faible';
+                strengthBar.style.backgroundColor = '#dc3545';
+            } else if (strength < 70) {
+                strengthText.textContent = '🟡 Moyen';
+                strengthBar.style.backgroundColor = '#ffc107';
+            } else {
+                strengthText.textContent = '🟢 Fort';
+                strengthBar.style.backgroundColor = '#28a745';
+            }
+        }
+
+        updateSubmitButtonState();
+    });
+
+    function updateCarSummary() {
+        const model = carModelInput.value.trim();
+        const seats = availableSeatsInput.value.trim();
+        if (hasCarCheckbox.checked && model && seats) {
+            carSummary.style.display = '';
+            carModelSummary.textContent = model;
+            availableSeatsSummary.textContent = seats;
+        } else {
+            carSummary.style.display = 'none';
+        }
+    }
+
+    function updatePasswordSection() {
+        if (changePasswordCheckbox.checked) {
+            passwordSection.style.display = 'block';
+            newPasswordInput.disabled = false;
+        } else {
+            passwordSection.style.display = 'none';
+            newPasswordInput.value = '';
+            newPasswordInput.disabled = true;
+        }
+    }
+
+    function getCurrentState() {
+        return {
+            name: nameInput.value.trim(),
+            hasCar: hasCarCheckbox.checked,
+            carModel: carModelInput.value.trim(),
+            availableSeats: availableSeatsInput.value.trim(),
+            changePassword: changePasswordCheckbox.checked,
+            newPassword: newPasswordInput.value.trim()
+        };
+    }
+
+    function formHasChanges() {
+        const current = getCurrentState();
+        return current.name !== initialState.name
+            || current.hasCar !== initialState.hasCar
+            || current.carModel !== initialState.carModel
+            || current.availableSeats !== initialState.availableSeats
+            || current.changePassword
+            || current.newPassword !== '';
+    }
+
+    function isCarInfoValid() {
+        if (!hasCarCheckbox.checked) {
+            return true;
+        }
+        return carModelInput.value.trim() !== '' && availableSeatsInput.value.trim() !== '';
+    }
+
+    function isPasswordSectionValid() {
+        if (!changePasswordCheckbox.checked) {
+            return true;
+        }
+
+        const password = newPasswordInput.value.trim();
+        if (password === '') {
+            return false;
+        }
+
+        const strength = calculatePasswordStrength(password);
+        return strength >= 40;
+    }
+
+    function updateSubmitButtonState() {
+        const nameNotEmpty = nameInput.value.trim() !== '';
+        submitButton.disabled = !nameNotEmpty || !formHasChanges() || !isCarInfoValid() || !isPasswordSectionValid();
+    }
+
+    function saveCarInfoToServer(hasCar, model, seats, imageFile = null, removeCarImage = false) {
+        const url = '{{ path('app_profile_car_save') }}';
+        const formData = new FormData();
+        formData.append('has_car', hasCar ? '1' : '0');
+        formData.append('car_model', model || '');
+        formData.append('available_seats', seats ? String(seats) : '');
+        if (removeCarImage) {
+            formData.append('remove_car_image', '1');
+        }
+        if (imageFile instanceof File) {
+            formData.append('image_car', imageFile);
+        }
+
+        return fetch(url, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        }).then(response => {
+            if (!response.ok) {
+                return response.json().then(json => {
+                    throw new Error(json.message || 'Impossible de sauvegarder les informations de voiture.');
+                });
+            }
+            return response.json();
+        });
+    }
+
+    function applyTheme(theme) {
+        if (window.setSiteTheme) {
+            try { window.setSiteTheme(theme); } catch (e) { /* ignore */ }
+        }
+        // ensure immediate visual change even if setSiteTheme not available
+        document.body.classList.toggle('theme-dark', theme === 'dark');
+        document.body.classList.toggle('theme-light', theme === 'light');
+        themeInputs.forEach(input => input.checked = input.value === theme);
+    }
+
+    hasCarCheckbox.addEventListener('change', function () {
+        if (suppressHasCarChange) return;
+        if (hasCarCheckbox.checked) {
+            pendingCarChange = 'add_checkbox';
+            carInfoError.style.display = 'none';
+            carInfoModel.value = carModelInput.value.trim();
+            carInfoSeats.value = availableSeatsInput.value.trim() || '1';
+            carInfoModal.show();
+        } else {
+            pendingCarChange = 'remove';
+            removeCarModal.show();
+        }
+    });
+
+    editCarInfo.addEventListener('click', function () {
+        // mark as edit flow so cancel restores previous values
+        pendingCarChange = 'edit';
+        prevHasCar = hasCarCheckbox.checked;
+        prevCarModel = carModelInput.value;
+        prevAvailableSeats = availableSeatsInput.value;
+        carInfoError.style.display = 'none';
+        carInfoModel.value = carModelInput.value.trim();
+        carInfoSeats.value = availableSeatsInput.value.trim();
+        carInfoModal.show();
+    });
+
+    carInfoModalElement.addEventListener('hidden.bs.modal', function () {
+        if (pendingCarChange === 'add_checkbox') {
+            // user opened modal by checking the checkbox but closed without saving
+            suppressHasCarChange = true;
+            hasCarCheckbox.checked = false;
+            suppressHasCarChange = false;
+            pendingCarChange = null;
+            updateCarSummary();
+            updateSubmitButtonState();
+            // cleanup any leftover backdrops
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            return;
+        }
+
+        if (pendingCarChange === 'edit') {
+            // restore previous car info on cancel
+            carModelInput.value = prevCarModel || '';
+            availableSeatsInput.value = prevAvailableSeats || '';
+            pendingCarChange = null;
+            updateCarSummary();
+            updateSubmitButtonState();
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            return;
+        }
+    });
+
+    removeCarModalElement.addEventListener('hidden.bs.modal', function () {
+        if (pendingCarChange === 'remove') {
+            hasCarCheckbox.checked = true;
+            pendingCarChange = null;
+            updateCarSummary();
+            updateSubmitButtonState();
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+        }
+    });
+
+    carImageInput.addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) {
+            carImagePreview.style.display = 'none';
+            carImagePreviewImg.src = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            carImagePreviewImg.src = event.target.result;
+            carImagePreview.style.display = 'block';
+            if (removeCarImageHidden) {
+                removeCarImageHidden.value = '0';
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    removeCarImageButton.addEventListener('click', function () {
+        if (carImageInput) {
+            carImageInput.value = '';
+        }
+        if (carImagePreview) {
+            carImagePreview.style.display = 'none';
+            carImagePreviewImg.src = '';
+        }
+        if (removeCarImageHidden) {
+            removeCarImageHidden.value = '1';
+        }
+    });
+
+    saveCarInfoButton.addEventListener('click', function () {
+        const model = carInfoModel.value.trim();
+        const seatsValue = carInfoSeats.value.trim();
+        const seatsNumber = parseInt(seatsValue, 10);
+        const imageFile = carImageInput.files[0];
+        const removeImage = removeCarImageHidden && removeCarImageHidden.value === '1';
+
+        if (!model) {
+            carInfoError.textContent = 'Le modèle de voiture est requis.';
+            carInfoError.style.display = 'block';
+            return;
+        }
+        if (!seatsValue || isNaN(seatsNumber) || seatsNumber < 1 || seatsNumber > 8) {
+            carInfoError.textContent = 'Le nombre de places doit être compris entre 1 et 8.';
+            carInfoError.style.display = 'block';
+            return;
+        }
+
+        carModelInput.value = model;
+        availableSeatsInput.value = seatsNumber;
+        pendingCarChange = null;
+        carInfoModal.hide();
+        updateCarSummary();
+        updateSubmitButtonState();
+
+        // persist car info immediately
+        saveCarInfoToServer(true, model, seatsNumber, imageFile, removeImage)
+            .then(() => {
+                initialState.hasCar = true;
+                initialState.carModel = model;
+                initialState.availableSeats = String(seatsNumber);
+                if (!changePasswordCheckbox.checked) {
+                    window.location.reload();
+                }
+            })
+            .catch(() => {
+                if (!changePasswordCheckbox.checked) {
+                    window.location.reload();
+                }
+            });
+    });
+
+    cancelCarInfoButton.addEventListener('click', function () {
+        // simply hide modal; hidden handler will restore state depending on flow
+        carInfoModal.hide();
+    });
+
+    confirmRemoveCar.addEventListener('click', function () {
+        // clear car info and persist immediately by submitting the form
+        suppressHasCarChange = true;
+        hasCarCheckbox.checked = false;
+        suppressHasCarChange = false;
+        carModelInput.value = '';
+        availableSeatsInput.value = '';
+        if (carImageInput) {
+            carImageInput.value = '';
+        }
+        if (carImagePreview) {
+            carImagePreview.style.display = 'none';
+            carImagePreviewImg.src = '';
+        }
+        if (removeCarImageHidden) {
+            removeCarImageHidden.value = '1';
+        }
+        pendingCarChange = null;
+        removeCarModal.hide();
+        updateCarSummary();
+        updateSubmitButtonState();
+        // persist removal immediately
+        saveCarInfoToServer(false, '', '', null, true)
+            .then(() => {
+                initialState.hasCar = false;
+                initialState.carModel = '';
+                initialState.availableSeats = '';
+                window.location.reload();
+            })
+            .catch(() => {
+                window.location.reload();
+            });
+    });
+
+    changePasswordCheckbox.addEventListener('change', function () {
+        updatePasswordSection();
+        updateSubmitButtonState();
+    });
+
+    newPasswordInput.addEventListener('input', updateSubmitButtonState);
+    nameInput.addEventListener('input', updateSubmitButtonState);
+
+    submitButton.addEventListener('click', function () {
+        // If user requests a password change, require current password via modal.
+        if (changePasswordCheckbox.checked) {
+            confirmPasswordInput.value = '';
+            confirmPasswordHidden.value = '';
+            confirmProfileSave.disabled = true;
+            new bootstrap.Modal(document.getElementById('profileConfirmModal')).show();
+            return;
+        }
+
+        // No password required: submit directly
+        confirmPasswordHidden.value = '';
+        form.submit();
+    });
+
+    confirmPasswordInput.addEventListener('input', function () {
+        confirmProfileSave.disabled = this.value.trim() === '';
+    });
+
+    confirmProfileSave.addEventListener('click', function () {
+        if (confirmPasswordInput.value.trim() === '') {
+            return;
+        }
+        confirmPasswordHidden.value = confirmPasswordInput.value.trim();
+        form.submit();
+    });
+
+    themeInputs.forEach(input => {
+        input.addEventListener('change', function () {
+            if (this.checked) {
+                applyTheme(this.value);
+                localStorage.setItem('siteTheme', this.value);
+            }
+        });
+    });
+
+    deleteAccountButton.addEventListener('click', function () {
+        deletePasswordInput.value = '';
+        deleteError.style.display = 'none';
+        deleteAccountModal.show();
+    });
+
+    confirmDeleteAccount.addEventListener('click', function () {
+        const password = deletePasswordInput.value.trim();
+        if (!password) {
+            deleteError.textContent = 'Le mot de passe est requis pour supprimer le compte.';
+            deleteError.style.display = 'block';
+            return;
+        }
+        deleteConfirmPasswordHidden.value = password;
+        deleteForm.submit();
+    });
+
+    const storedTheme = localStorage.getItem('siteTheme') || 'light';
+    applyTheme(storedTheme);
+    updateCarSummary();
+    updatePasswordSection();
+    updateSubmitButtonState();
+
+    // global cleanup: ensure no stray backdrops remain after any modal hides
+    document.querySelectorAll('.modal').forEach(m => {
+        m.addEventListener('hidden.bs.modal', function () {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initAccountSettings);
+document.addEventListener('turbo:load', initAccountSettings);
+</script>
+{% endblock %}
