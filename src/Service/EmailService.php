@@ -20,7 +20,7 @@ class EmailService
         $driver = $ride->getDriver();
 
         $email = (new TemplatedEmail())
-            ->from(new Address('noreply@covoiturage.fr', 'Covoiturage'))
+            ->from(new Address('rakotomihaminasandafitia@gmail.com', 'Covoiturage'))
             ->to($driver->getEmail())
             ->subject('Nouvelle réservation sur votre trajet')
             ->htmlTemplate('email/ride_booking_driver.html.twig')

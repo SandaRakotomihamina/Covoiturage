@@ -19,10 +19,9 @@ Ce projet Symfony est un site de covoiturage permettant aux utilisateurs de prop
 4. **Réserver** : Cherchez et réservez des trajets disponibles
 5. **Gestion** : Consultez vos trajets dans "Mes trajets"
 
-## Identifiants de test
-
-- **Email** : `admin@example.com`
-- **Mot de passe** : `admin123`
+## Mail
+- **Configuration de .env pour le mail et le mot de passe** : Modifier la variable MAILER_DNS pour l'email et le mot de passe d'application
+- **Modifier l'addresse d'expediteur** : Dans le fichier de service `/home/sanda/Public/Projet ihm/covoiturage/src/Service/EmailService.php`, modifier le mail de l'expediteur dans les methodes sendRideBookingNotification() et sendRideReminder()
 
 ## Installation
 
