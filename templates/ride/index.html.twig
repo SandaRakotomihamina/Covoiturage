@@ -22,7 +22,7 @@
                 type="text" 
                 id="searchDestination" 
                 class="form-control" 
-                placeholder="Rechercher par destination..." 
+                placeholder="Rechercher par lieu..." 
                 style="padding: 0.75rem; border: 1px solid var(--border-color);"
             >
         </div>
@@ -47,41 +47,41 @@
                                     {{ ride.departure }} <span style="opacity: 0.6;">→</span>{{ ride.destination }}
                                 </h5>
                                 {% if ride.availableSeats > 2 %}
-                                    <span class="badge bg-success">{{ ride.availableSeats }} places libres</span>
+                                    <span class="badge bg-success">{{ ride.availableSeats }} Places</span>
                                 {% elseif ride.availableSeats > 0 %}
-                                    <span class="badge bg-warning">{{ ride.availableSeats }} places</span>
+                                    <span class="badge bg-warning">{{ ride.availableSeats }} {% if ride.availableSeats == 1 %} place {% else %} places {% endif %}</span>
                                 {% else %}
                                     <span class="badge bg-danger">Complet</span>
                                 {% endif %}
                             </div>
-
+                            <div style="display: flex">
                                 {# image voiture avec fallback #}
                                 <div class="mb-3">
                                     <img src="{{ ride.driver.imageCar ? ride.driver.imageCar : asset('images/default.png') }}" alt="Photo de la voiture de {{ ride.driver.name }}" class="img-fluid rounded car-photo-preview" style="max-width: 140px; object-fit: cover; border: 1px solid var(--border-color);">
                                 </div>
-                            <div class="d-grid gap-2" style="font-size: 0.95rem; gap: 0.75rem !important; margin-bottom: 1.5rem;">
-                                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                    <span style="width: 1.5rem; text-align: center;"></span>
-                                    <span><strong>Départ :</strong> {{ ride.departureTime|date('d/m/Y à H:i') }}</span>
-                                </div>
-                                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                    <span style="width: 1.5rem; text-align: center;"></span>
-                                    <span><strong>Conducteur :</strong> {{ ride.driver.name }}</span>
-                                </div>
-                                {% if ride.driver.carModel %}
+                                <div class="d-grid gap-2" style="font-size: 0.95rem; gap: 0.75rem !important; margin-bottom: 1.5rem;">
                                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                                         <span style="width: 1.5rem; text-align: center;"></span>
-                                        <span><strong>Voiture :</strong> {{ ride.driver.carModel }}</span>
+                                        <span><strong>Départ :</strong> {{ ride.departureTime|date('d/m/Y à H:i') }}</span>
                                     </div>
-                                {% endif %}
-                                {% if ride.notes %}
-                                    <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
-                                        <span style="width: 1.5rem; text-align: center; margin-top: 0.2rem;"></span>
-                                        <span><strong>Infos :</strong> {{ ride.notes|slice(0, 50) }}{% if ride.notes|length > 50 %}...{% endif %}</span>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <span style="width: 1.5rem; text-align: center;"></span>
+                                        <span><strong>Conducteur :</strong> {{ ride.driver.name }}</span>
                                     </div>
-                                {% endif %}
+                                    {% if ride.driver.carModel %}
+                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                            <span style="width: 1.5rem; text-align: center;"></span>
+                                            <span><strong>Voiture :</strong> {{ ride.driver.carModel }}</span>
+                                        </div>
+                                    {% endif %}
+                                    {% if ride.notes %}
+                                        <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+                                            <span style="width: 1.5rem; text-align: center; margin-top: 0.2rem;"></span>
+                                            <span><strong>Infos :</strong> {{ ride.notes|slice(0, 50) }}{% if ride.notes|length > 50 %}...{% endif %}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </div>
-
                             <a href="{{ path('app_ride_show', {'id': ride.id}) }}" class="btn btn-primary w-100" style="margin-top: auto;">
                                 Voir les détails
                             </a>

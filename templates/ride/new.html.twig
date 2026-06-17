@@ -13,21 +13,23 @@
                 </div>
                 <div class="card-body">
                     <form method="post">
-                        <div class="mb-4">
-                            <label for="departure" class="form-label">Lieu de départ</label>
-                            <input type="text" class="form-control" id="departure" name="departure" 
-                                   placeholder="" 
-                                   required
-                                   aria-describedby="departureHelp">
-                            <small id="departureHelp" class="form-text text-muted">Entrez le lieu de départ exact</small>
-                        </div>
-                        <div class="mb-4">
-                            <label for="destination" class="form-label">Destination</label>
-                            <input type="text" class="form-control" id="destination" name="destination" 
-                                   placeholder="" 
-                                   required
-                                   aria-describedby="destinationHelp">
-                            <small id="destinationHelp" class="form-text text-muted">Entrez le lieu d'arrivée exact</small>
+                        <div style="display: flex; gap: 1rem">
+                            <div class="mb-4" style="width: 100%">
+                                <label for="departure" class="form-label">Lieu de départ</label>
+                                <input type="text" class="form-control" id="departure" name="departure" 
+                                    placeholder="" 
+                                    required
+                                    aria-describedby="departureHelp">
+                                <small id="departureHelp" class="form-text text-muted">Entrez le lieu de départ exact</small>
+                            </div>
+                            <div class="mb-4" style="width: 100%">
+                                <label for="destination" class="form-label">Destination</label>
+                                <input type="text" class="form-control" id="destination" name="destination" 
+                                    placeholder="" 
+                                    required
+                                    aria-describedby="destinationHelp">
+                                <small id="destinationHelp" class="form-text text-muted">Entrez le lieu d'arrivée exact</small>
+                            </div>
                         </div>
                         <div class="mb-4">
                             <label for="departure_time" class="form-label">Date et heure de départ</label>

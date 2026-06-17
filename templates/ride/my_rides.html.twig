@@ -40,33 +40,34 @@
                                     <span class="badge bg-success">Passager</span>
                                 {% endif %}
                             </div>
-                            <div class="mb-3">
-                                <img src="{{ ride.driver.imageCar ? ride.driver.imageCar : asset('images/default.png') }}" alt="Photo de la voiture de {{ ride.driver.name }}" class="img-fluid rounded car-photo-preview" style="max-width: 140px; object-fit: cover; border: 1px solid var(--border-color);">
-                            </div>
-                            <div class="d-grid gap-2" style="gap: 0.75rem !important; margin-bottom: 1.5rem;">
-                                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                    <span style="width: 1.5rem; text-align: center;"></span>
-                                    <span><strong>Départ :</strong> {{ ride.departureTime|date('d/m/Y à H:i') }}</span>
+                            <div style="display: flex">
+                                <div class="mb-3">
+                                    <img src="{{ ride.driver.imageCar ? ride.driver.imageCar : asset('images/default.png') }}" alt="Photo de la voiture de {{ ride.driver.name }}" class="img-fluid rounded car-photo-preview" style="max-width: 140px; object-fit: cover; border: 1px solid var(--border-color);">
                                 </div>
-                                {% if ride.driver == app.user %}
+                                <div class="d-grid gap-2" style="gap: 0.75rem !important; margin-bottom: 1.5rem;">
                                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                                         <span style="width: 1.5rem; text-align: center;"></span>
-                                        <span><strong>Passagers :</strong> {{ ride.passengers|length }}/{{ ride.availableSeats + ride.passengers|length }}</span>
+                                        <span><strong>Départ :</strong> {{ ride.departureTime|date('d/m/Y à H:i') }}</span>
                                     </div>
-                                {% else %}
-                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                        <span style="width: 1.5rem; text-align: center;"></span>
-                                        <span><strong>Conducteur :</strong> {{ ride.driver.name }}</span>
-                                    </div>
-                                    {% if ride.driver.carModel %}
+                                    {% if ride.driver == app.user %}
                                         <div style="display: flex; gap: 0.5rem; align-items: center;">
                                             <span style="width: 1.5rem; text-align: center;"></span>
-                                            <span><strong>Voiture :</strong> {{ ride.driver.carModel }}</span>
+                                            <span><strong>Passagers :</strong> {{ ride.passengers|length }}/{{ ride.availableSeats + ride.passengers|length }}</span>
                                         </div>
+                                    {% else %}
+                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                            <span style="width: 1.5rem; text-align: center;"></span>
+                                            <span><strong>Conducteur :</strong> {{ ride.driver.name }}</span>
+                                        </div>
+                                        {% if ride.driver.carModel %}
+                                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                                <span style="width: 1.5rem; text-align: center;"></span>
+                                                <span><strong>Voiture :</strong> {{ ride.driver.carModel }}</span>
+                                            </div>
+                                        {% endif %}
                                     {% endif %}
-                                {% endif %}
+                                </div>
                             </div>
-
                             <div class="d-flex gap-2">
                                 <a href="{{ path('app_ride_show', {'id': ride.id}) }}" class="btn btn-primary flex-grow-1">Voir les détails</a>
                                 {% if ride.driver != app.user and ride.passengers.contains(app.user) %}
